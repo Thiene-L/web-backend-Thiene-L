@@ -144,8 +144,8 @@ router.get('/auth/google/callback',
         req.session.username = username.toString();
         console.log('User logged in', username);
         res.redirect(`https://bl-hw7.surge.sh/main?username=${encodeURIComponent(username)}`);
-    }),
-    function (err, req, res, next) {
+    },
+    function (req, res, next, err) {
         // 处理错误
         if (err.message === 'This third-party account has already been linked.') {
             // 重定向到错误页面或显示错误消息
@@ -154,7 +154,8 @@ router.get('/auth/google/callback',
             // 处理其他类型的错误
             next(err);
         }
-    };
+    }
+);
 
 router.get('/', (req, res) => {
     console.log("Hello World!");
