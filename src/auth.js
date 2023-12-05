@@ -44,8 +44,8 @@ passport.use(new GoogleStrategy({
                 if (existingUserFollowings && existingUserFollowings.following.length > 0) {
                     // 更新 request.session.username 的关注列表，添加 existingUser 的关注者
                     await profiles.updateOne(
-                        { username: request.session.username },
-                        { $addToSet: { following: { $each: existingUserFollowings.following } } }
+                        {username: request.session.username},
+                        {$addToSet: {following: {$each: existingUserFollowings.following}}}
                     );
                 }
 
@@ -62,7 +62,7 @@ passport.use(new GoogleStrategy({
             if (linkedUser !== null) {
                 console.log('User already linked');
                 // 导航到主页
-                done(new Error('User already linked'));
+                done(null, linkedUser);
                 return;
             }
 
@@ -145,7 +145,17 @@ router.get('/auth/google/callback',
         req.session.username = username.toString();
         console.log('User logged in', username);
         res.redirect(`https://bl-hw7.surge.sh/main?username=${encodeURIComponent(username)}`);
-    });
+    }),
+    function (err, req, res, next) {
+        // 处理错误
+        if (err.message === 'This third-party account has already been linked.') {
+            // 重定向到错误页面或显示错误消息
+            res.redirect('/error?message=account_already_linked');
+        } else {
+            // 处理其他类型的错误
+            next(err);
+        }
+    };
 
 router.get('/', (req, res) => {
     console.log("Hello World!");
