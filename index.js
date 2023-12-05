@@ -52,17 +52,7 @@ mongoose.connection.on('open', function (err) {
                 secure: true
             },
         }));
-        // const allowedOrigins = ['http://localhost:4200', 'https://bl-hw7.surge.sh', 'http://localhost:3000', 'https://accounts.google.com'];
-        // app.use(cors({
-        //     origin: function (origin, callback) {
-        //         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        //             callback(null, true);
-        //         } else {
-        //             callback(new Error('Not allowed by CORS'));
-        //         }
-        //     },
-        //     credentials: true
-        // }));
+
         app.use(passport.initialize());
         app.use(passport.session());
         app.use(cookieParser());
