@@ -13,7 +13,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 passport.use(new GoogleStrategy({
         clientID: '94142100628-sbr3je2nnrumc35jr3935l2i50jlqpsd.apps.googleusercontent.com',
         clientSecret: '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',
-        callbackURL: "http://localhost:3000/auth/google/callback",
+        callbackURL: "https://bl73-0e2710080106.herokuapp.com/auth/google/callback",
         passReqToCallback: true
     },
     async function (request, accessToken, refreshToken, profile, done) {
@@ -181,7 +181,7 @@ router.post('/register', async (req, res) => {
 
         console.log('New user created', newUser);
         console.log('New profile created', newProfile)
-        // res.redirect('http://localhost:3000/login');
+        // res.redirect('https://bl73-0e2710080106.herokuapp.com/login');
         return res.send({result: 'success', username: username});
     } catch (err) {
         console.log('Error: ', err);
@@ -291,7 +291,7 @@ router.post('/link/:id?', async (req, res) => {
     req.session.username = username; // 确保我们知道要链接的账户
 
     console.log('Redirecting to Google OAuth');
-    return res.status(200).json({redirect: 'http://localhost:3000/auth/google'});
+    return res.status(200).json({redirect: 'https://bl73-0e2710080106.herokuapp.com/auth/google'});
 });
 
 // router.post('/link/:id?', async (req, res) => {
