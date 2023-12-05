@@ -9,7 +9,7 @@ const cloudinary = require('./cloudinaryConfig');
 const multer = require('multer');
 const upload = multer({dest: 'uploads/'}); // 暂时保存上传的文件
 
-// router.use(isLoggedIn);
+router.use(isLoggedIn);
 
 function getArticlesByAuthors({authors, page, limit}) {
     const skip = (page - 1) * limit; // 计算跳过的文档数
