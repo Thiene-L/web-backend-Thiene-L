@@ -125,7 +125,7 @@ router.get('/auth/google',
     passport.authenticate('google', {scope: ['profile', 'email']}));
 
 router.get('/auth/google/callback',
-    passport.authenticate('google', {failureRedirect: 'http://localhost:4200'}),
+    passport.authenticate('google', {failureRedirect: 'https://bl73-0e2710080106.herokuapp.com'}),
     function (req, res) {
         const username = req.user.username;
         // 获取username
@@ -134,7 +134,7 @@ router.get('/auth/google/callback',
         // 成功认证，重定向回主页或其他页面
         req.session.username = username.toString();
         console.log('User logged in', username);
-        res.redirect(`http://localhost:4200/main?username=${encodeURIComponent(username)}`);
+        res.redirect(`https://bl73-0e2710080106.herokuapp.com/main?username=${encodeURIComponent(username)}`);
     });
 
 router.get('/', (req, res) => {
