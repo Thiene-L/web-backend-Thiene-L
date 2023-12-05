@@ -26,12 +26,14 @@ router.get('/articles/:id?', async (req, res) => {
         const limit = parseInt(req.query.limit) || 10; // 获取每页文章数，默认为10
 
         const username = req.cookies.username;
+        console.log('username: ' + username);
         const userObj = await profiles.findOne({username: username});
         const usersToQuery = [username, ...userObj.following];
 
         const articles = await getArticlesByAuthors({authors: usersToQuery, page, limit});
         return res.json(articles);
     } catch (err) {
+        console.error('Error finding articles', err);
         return res.status(500).send(err.message);
     }
 });
