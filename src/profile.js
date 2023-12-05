@@ -7,7 +7,7 @@ const cloudinary = require('./cloudinaryConfig');
 const multer = require('multer');
 const upload = multer({dest: 'uploads/'}); // 暂时保存上传的文件
 
-// router.use(isLoggedIn);
+router.use(isLoggedIn);
 
 router.get('/headline/:user?', async (req, res) => {
     const username = req.params.user || req.session.username;
