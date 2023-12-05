@@ -32,6 +32,7 @@ router.get('/articles/:id?', async (req, res) => {
         const articles = await getArticlesByAuthors({authors: usersToQuery, page, limit});
         return res.json(articles);
     } catch (err) {
+        console.error('Error finding articles', err);
         return res.status(500).send(err.message);
     }
 });
