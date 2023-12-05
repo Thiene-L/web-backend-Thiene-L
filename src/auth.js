@@ -62,7 +62,7 @@ passport.use(new GoogleStrategy({
             if (linkedUser && request.session.username !== linkedUser.username) {
                 console.log('This third-party account has already been linked.');
                 // 这里我们使用 done 的第一个参数来传递错误信息
-                done(new Error('This third-party account has already been linked.'));
+                return done(new Error('This third-party account has already been linked.'));
             }
 
             // 获取当前登录用户并更新其auth信息
