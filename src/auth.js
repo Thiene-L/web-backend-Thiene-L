@@ -56,6 +56,16 @@ passport.use(new GoogleStrategy({
                 await profiles.deleteOne({username: existingUser.username});
                 await auths.deleteOne({username: existingUser.username});
             }
+
+            // 如果账号已经被别的用户链接
+            const linkedUser = await auths.findOne({'auth.google': username});
+            if (linkedUser !== null) {
+                console.log('User already linked');
+                // 导航到主页
+                done(new Error('User already linked'));
+                return;
+            }
+
             // 获取当前登录用户并更新其auth信息
             const currentUser = await auths.findOne({username: request.session.username});
             if (currentUser) {
