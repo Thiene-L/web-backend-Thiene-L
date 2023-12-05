@@ -25,21 +25,19 @@ router.get('/articles/:id?', async (req, res) => {
         const page = parseInt(req.query.page) || 1; // 获取当前页码，默认为1
         const limit = parseInt(req.query.limit) || 10; // 获取每页文章数，默认为10
 
-        const username = req.session.username || localStorage.getItem('username');
-        console.log('username: ' + username);
+        const username = req.cookies.username;
         const userObj = await profiles.findOne({username: username});
         const usersToQuery = [username, ...userObj.following];
 
         const articles = await getArticlesByAuthors({authors: usersToQuery, page, limit});
         return res.json(articles);
     } catch (err) {
-        console.error('Error finding articles', err);
         return res.status(500).send(err.message);
     }
 });
 
 // router.get('/articles/:id?', async (req, res) => {
-//     const pid = req.params.id || req.session.username;
+//     const pid = req.params.id || req.cookies.username;
 //
 //     if (!pid) {
 //         console.log('No username found');
@@ -65,7 +63,7 @@ router.get('/articles/:id?', async (req, res) => {
 router.put('/articles/:id', async (req, res) => {
     const articleId = req.params.id;
     const {text, commentId} = req.body; // 假设请求的正文中包含这些字段
-    const username = req.session.username || localStorage.getItem('username');
+    const {username} = req.session;
 
     // 查找文章
     try {
@@ -144,7 +142,7 @@ router.put('/articles/:id', async (req, res) => {
 
 router.post('/article', upload.single('articleImage'), async (req, res) => {
     const {text} = req.body;
-    const username = req.session.username || localStorage.getItem('username');
+    const {username} = req.session;
     let imageUrl = null;
 
     // 如果请求中包含文件，上传文件到Cloudinary

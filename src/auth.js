@@ -3,12 +3,14 @@ let router = new Router();
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const {v4: uuid} = require('uuid');
-const session = require("express-session");
+const cookieParser = require('cookie-parser');
 const auths = require('./authSchema');
 const articles = require('./articlesSchema');
 const profiles = require('./profileSchema');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+
+router.use(cookieParser());
 
 passport.use(new GoogleStrategy({
         clientID: '94142100628-sbr3je2nnrumc35jr3935l2i50jlqpsd.apps.googleusercontent.com',
@@ -44,20 +46,20 @@ passport.use(new GoogleStrategy({
                 if (existingUserFollowings && existingUserFollowings.following.length > 0) {
                     // 更新 request.session.username 的关注列表，添加 existingUser 的关注者
                     await profiles.updateOne(
-                        {username: localStorage.getItem('username')},
+                        {username: request.session.username},
                         {$addToSet: {following: {$each: existingUserFollowings.following}}}
                     );
                 }
 
                 // 把所有关注 existingUser 的用户的关注列表里的 existingUser 改成 request.session.username
-                await profiles.updateMany({}, {$set: {"following.$[elem]": localStorage.getItem('username')}}, {arrayFilters: [{"elem": existingUser.username}]});
+                await profiles.updateMany({}, {$set: {"following.$[elem]": request.session.username}}, {arrayFilters: [{"elem": existingUser.username}]});
 
                 // 删除existingUser所有内容，包括auths和profile
                 await profiles.deleteOne({username: existingUser.username});
                 await auths.deleteOne({username: existingUser.username});
             }
             // 获取当前登录用户并更新其auth信息
-            const currentUser = await auths.findOne({username: localStorage.getItem('username')});
+            const currentUser = await auths.findOne({username: request.session.username});
             if (currentUser) {
                 currentUser.auth.set(provider, username);
                 await currentUser.save();
@@ -132,7 +134,7 @@ router.get('/auth/google/callback',
         console.log('username: ' + username);
 
         // 成功认证，重定向回主页或其他页面
-        localStorage.setItem('username', username.toString());
+        req.cookies.username = username.toString();
         console.log('User logged in', username);
         res.redirect(`http://localhost:4200/main?username=${encodeURIComponent(username)}`);
     });
@@ -204,8 +206,8 @@ router.post('/login', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (isMatch) {
-            req.session.username = user.username.toString();
-            localStorage.setItem('username', user.username.toString());
+            // 设置 cookie
+            res.cookie('username', username, { httpOnly: true, maxAge: 24 * 3600 * 1000 });
             console.log('User logged in');
             return res.send({username: username, result: 'success'});
         } else {
@@ -235,8 +237,6 @@ router.put('/logout', (req, res) => {
             res.clearCookie('userId');
             res.clearCookie('')
 
-            localStorage.removeItem('username');
-
             // 如果session销毁成功且所有cookies清除，返回确认信息
             console.log('Logged out successfully');
             res.send('Logged out successfully');
@@ -258,7 +258,9 @@ router.put('/password', async (req, res) => {
     if (!newPassword) {
         return res.status(400).send('No new password provided');
     }
-    const username = localStorage.getItem('username');
+
+    // 从cookie中获取username
+    const username = req.cookies.username;
 
     if (username) {
         try {
@@ -281,7 +283,7 @@ router.put('/password', async (req, res) => {
 });
 
 router.post('/link/:id?', async (req, res) => {
-    const username = req.params.id || localStorage.getItem('username');
+    const username = req.params.id || req.cookies.username;
     const user = await auths.findOne({username: username});
 
     if (user && user.auth && user.auth.size > 0) {
@@ -291,14 +293,14 @@ router.post('/link/:id?', async (req, res) => {
 
     // 设置标记以指示用户正在尝试链接账户
     req.session.isLinkingAccount = true;
-    req.session.username = username; // 确保我们知道要链接的账户
+    req.cookies.username = username; // 确保我们知道要链接的账户
 
     console.log('Redirecting to Google OAuth');
     return res.status(200).json({redirect: 'https://bl73-0e2710080106.herokuapp.com/auth/google'});
 });
 
 // router.post('/link/:id?', async (req, res) => {
-//     const username = req.params.id || req.session.username;
+//     const username = req.params.id || req.cookies.username;
 //
 //     // 如果用户已经链接过账户
 //     const user = await auths.findOne({username: username});
@@ -313,11 +315,11 @@ router.post('/link/:id?', async (req, res) => {
 //     // 如果用户没有链接过账户
 //     // 重定向到第三方登录页面
 //     console.log('Redirecting to Google OAuth');
-//     return res.status(200).json({redirect: 'https://bl73-0e2710080106.herokuapp.com/auth/google'});
+//     return res.status(200).json({redirect: 'http://localhost:3000/auth/google'});
 // });
 
 router.post('/unlink/:id?', async (req, res) => {
-    const username = req.params.id || localStorage.getItem('username');
+    const username = req.params.id || req.cookies.username;
     const {provider} = req.body;
     const user = await auths.findOne({username: username});
 

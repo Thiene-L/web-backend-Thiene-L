@@ -4,8 +4,6 @@ const articleRouter = require('./src/articles');
 const authRouter = require('./src/auth');
 const express = require('express');
 const app = express();
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
@@ -54,7 +52,6 @@ mongoose.connection.on('open', function (err) {
         }));
 
         app.use(passport.initialize());
-        app.use(passport.session());
         app.use(cookieParser());
         app.use(authRouter());
         app.use(articleRouter());
