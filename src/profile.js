@@ -7,10 +7,10 @@ const cloudinary = require('./cloudinaryConfig');
 const multer = require('multer');
 const upload = multer({dest: 'uploads/'}); // 暂时保存上传的文件
 
-// router.use(isLoggedIn);
+router.use(isLoggedIn);
 
 router.get('/headline/:user?', async (req, res) => {
-    const username = req.params.user || req.cookies.username;
+    const username = req.params.user || req.session.username;
 
     console.log('username: ' + username);
 
@@ -33,7 +33,7 @@ router.put('/headline', async (req, res) => {
         return res.sendStatus(400);
     }
 
-    const username = req.cookies.username;
+    const {username} = req.session;
 
     if (!username) {
         console.log('No username found');
@@ -50,7 +50,7 @@ router.put('/headline', async (req, res) => {
 });
 
 router.get('/email/:user?', async (req, res) => {
-    const username = req.params.user || req.cookies.username;
+    const username = req.params.user || req.session.username;
 
     if (!username) {
         console.log('No username found');
@@ -75,7 +75,7 @@ router.get('/email/:user?', async (req, res) => {
 
 router.put('/email', async (req, res) => {
     const {email} = req.body;
-    const username = req.cookies.username;
+    const {username} = req.session;
 
     if (!username) {
         console.log('No username found');
@@ -94,7 +94,7 @@ router.put('/email', async (req, res) => {
 });
 
 router.get('/zipcode/:user?', async (req, res) => {
-    const username = req.params.user || req.cookies.username;
+    const username = req.params.user || req.session.username;
 
     if (!username) {
         console.log('No username found');
@@ -119,7 +119,7 @@ router.get('/zipcode/:user?', async (req, res) => {
 
 router.put('/zipcode', async (req, res) => {
     const {zipcode} = req.body;
-    const username = req.cookies.username;
+    const {username} = req.session;
 
     if (!username) {
         console.log('No username found');
@@ -138,7 +138,7 @@ router.put('/zipcode', async (req, res) => {
 });
 
 router.get('/dob/:user?', async (req, res) => {
-    const username = req.params.user || req.cookies.username;
+    const username = req.params.user || req.session.username;
 
     if (!username) {
         console.log('No username found');
@@ -167,7 +167,7 @@ router.get('/dob/:user?', async (req, res) => {
 });
 
 router.get('/phone/:user?', async (req, res) => {
-    const username = req.params.user || req.cookies.username;
+    const username = req.params.user || req.session.username;
 
     if (!username) {
         console.log('No username found');
@@ -202,7 +202,7 @@ router.put('/phone', async (req, res) => {
         return res.status(400).send('No phone number provided');
     }
 
-    const username = req.cookies.username;
+    const {username} = req.session;
 
     if (!username) {
         console.log('No username found');
@@ -221,7 +221,7 @@ router.put('/phone', async (req, res) => {
 })
 
 router.get('/avatar/:user?', async (req, res) => {
-    const username = req.params.user || req.cookies.username;
+    const username = req.params.user || req.session.username;
 
     if (!username) {
         console.log('No username found');
@@ -254,7 +254,7 @@ router.put('/avatar', upload.single('userImage'), async (req, res) => {
         return res.status(400).send('No file uploaded');
     }
 
-    const username = req.cookies.username;
+    const username = req.session.username;
 
     if (!username) {
         console.log('No username found');

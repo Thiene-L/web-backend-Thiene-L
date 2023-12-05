@@ -3,15 +3,13 @@ let router = new Router();
 const mongoose = require('mongoose');
 const articles = require('./articlesSchema');
 const profiles = require('./profileSchema');
-const cookieParser = require('cookie-parser');
 const {status, send} = require("express/lib/response");
 const {isLoggedIn} = require('./middlewares');
 const cloudinary = require('./cloudinaryConfig');
 const multer = require('multer');
 const upload = multer({dest: 'uploads/'}); // 暂时保存上传的文件
 
-// router.use(isLoggedIn);
-router.use(cookieParser());
+router.use(isLoggedIn);
 
 function getArticlesByAuthors({authors, page, limit}) {
     const skip = (page - 1) * limit; // 计算跳过的文档数
@@ -26,23 +24,20 @@ router.get('/articles/:id?', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1; // 获取当前页码，默认为1
         const limit = parseInt(req.query.limit) || 10; // 获取每页文章数，默认为10
-        const username = req.cookies.username;
 
-        console.log('cookies:', req.cookies);
-        console.log('username: ' + username);
+        const username = req.session.username;
         const userObj = await profiles.findOne({username: username});
         const usersToQuery = [username, ...userObj.following];
 
         const articles = await getArticlesByAuthors({authors: usersToQuery, page, limit});
         return res.json(articles);
     } catch (err) {
-        console.error('Error finding articles', err);
         return res.status(500).send(err.message);
     }
 });
 
 // router.get('/articles/:id?', async (req, res) => {
-//     const pid = req.params.id || req.cookies.username;
+//     const pid = req.params.id || req.session.username;
 //
 //     if (!pid) {
 //         console.log('No username found');
@@ -68,7 +63,7 @@ router.get('/articles/:id?', async (req, res) => {
 router.put('/articles/:id', async (req, res) => {
     const articleId = req.params.id;
     const {text, commentId} = req.body; // 假设请求的正文中包含这些字段
-    const username = req.cookies.username;
+    const {username} = req.session;
 
     // 查找文章
     try {
@@ -147,7 +142,7 @@ router.put('/articles/:id', async (req, res) => {
 
 router.post('/article', upload.single('articleImage'), async (req, res) => {
     const {text} = req.body;
-    const username = req.cookies.username;
+    const {username} = req.session;
     let imageUrl = null;
 
     // 如果请求中包含文件，上传文件到Cloudinary
