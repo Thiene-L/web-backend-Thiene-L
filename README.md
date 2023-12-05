@@ -2,4 +2,4 @@
 
 "frontend": "https://bl-hw7.surge.sh",
 
-"backend": "https://bl73-e9753fe50cf1.herokuapp.com/"
+"backend": "https://bl73-0e2710080106.herokuapp.com/"
