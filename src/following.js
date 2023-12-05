@@ -7,7 +7,7 @@ const {isLoggedIn} = require('./middlewares');
 // router.use(isLoggedIn);
 
 router.get('/following/:user?', async (req, res) => {
-    const username = req.params.user || req.session.username;
+    const username = req.params.user || localStorage.getItem('username');
 
     if (!username) {
         console.log('No username found');
@@ -37,7 +37,7 @@ router.get('/following/:user?', async (req, res) => {
 
 router.put('/following/:user', async (req, res) => {
     const userToFollow = req.params.user; // 需要关注的用户
-    const {username} = req.session; // 当前登录的用户
+    const username = localStorage.getItem('username'); // 当前登录的用户
 
     if (!userToFollow) {
         console.log('No user specified to follow');
@@ -93,7 +93,7 @@ router.delete('/following/:user', async (req, res) => {
         return res.sendStatus(400);
     }
 
-    const {username} = req.session;
+    const username = localStorage.getItem('username');
 
     if (!username) {
         console.log('No username found in cookies');

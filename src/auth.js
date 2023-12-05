@@ -44,20 +44,20 @@ passport.use(new GoogleStrategy({
                 if (existingUserFollowings && existingUserFollowings.following.length > 0) {
                     // 更新 request.session.username 的关注列表，添加 existingUser 的关注者
                     await profiles.updateOne(
-                        { username: request.session.username },
-                        { $addToSet: { following: { $each: existingUserFollowings.following } } }
+                        {username: localStorage.getItem('username')},
+                        {$addToSet: {following: {$each: existingUserFollowings.following}}}
                     );
                 }
 
                 // 把所有关注 existingUser 的用户的关注列表里的 existingUser 改成 request.session.username
-                await profiles.updateMany({}, {$set: {"following.$[elem]": request.session.username}}, {arrayFilters: [{"elem": existingUser.username}]});
+                await profiles.updateMany({}, {$set: {"following.$[elem]": localStorage.getItem('username')}}, {arrayFilters: [{"elem": existingUser.username}]});
 
                 // 删除existingUser所有内容，包括auths和profile
                 await profiles.deleteOne({username: existingUser.username});
                 await auths.deleteOne({username: existingUser.username});
             }
             // 获取当前登录用户并更新其auth信息
-            const currentUser = await auths.findOne({username: request.session.username});
+            const currentUser = await auths.findOne({username: localStorage.getItem('username')});
             if (currentUser) {
                 currentUser.auth.set(provider, username);
                 await currentUser.save();
@@ -132,7 +132,7 @@ router.get('/auth/google/callback',
         console.log('username: ' + username);
 
         // 成功认证，重定向回主页或其他页面
-        req.session.username = username.toString();
+        localStorage.setItem('username', username.toString());
         console.log('User logged in', username);
         res.redirect(`http://localhost:4200/main?username=${encodeURIComponent(username)}`);
     });
@@ -205,6 +205,7 @@ router.post('/login', async (req, res) => {
 
         if (isMatch) {
             req.session.username = user.username.toString();
+            localStorage.setItem('username', user.username.toString());
             console.log('User logged in');
             return res.send({username: username, result: 'success'});
         } else {
@@ -234,6 +235,8 @@ router.put('/logout', (req, res) => {
             res.clearCookie('userId');
             res.clearCookie('')
 
+            localStorage.removeItem('username');
+
             // 如果session销毁成功且所有cookies清除，返回确认信息
             console.log('Logged out successfully');
             res.send('Logged out successfully');
@@ -255,7 +258,7 @@ router.put('/password', async (req, res) => {
     if (!newPassword) {
         return res.status(400).send('No new password provided');
     }
-    const {username} = req.session;
+    const username = localStorage.getItem('username');
 
     if (username) {
         try {
@@ -278,7 +281,7 @@ router.put('/password', async (req, res) => {
 });
 
 router.post('/link/:id?', async (req, res) => {
-    const username = req.params.id || req.session.username;
+    const username = req.params.id || localStorage.getItem('username');
     const user = await auths.findOne({username: username});
 
     if (user && user.auth && user.auth.size > 0) {
@@ -314,7 +317,7 @@ router.post('/link/:id?', async (req, res) => {
 // });
 
 router.post('/unlink/:id?', async (req, res) => {
-    const username = req.params.id || req.session.username;
+    const username = req.params.id || localStorage.getItem('username');
     const {provider} = req.body;
     const user = await auths.findOne({username: username});
 
