@@ -216,24 +216,6 @@ router.post('/login', async (req, res) => {
         console.log('Error logging in', err);
         return res.status(500).send('Error logging in');
     }
-
-    session({
-        name: 'sid',   //返回给客户端cookie的key。
-        secret: 'monkeyKing', //参与加密的字符串（又称签名）
-        saveUninitialized: false, //是否在存储内容之前创建session会话
-        resave: true,//是否在每次请求时，强制重新保存session，即使他们没有变化（比较保险）
-        // store: MongoStore.create({
-        //     mongoUrl: connectionString,
-        //     touchAfter: 24 * 3600, //修改频率（例：//在24小时之内只更新一次）
-        //     ttl: 24 * 60 * 60 // session 的生存时间，这里设置为1天
-        // }),
-        cookie: {
-            httpOnly: true, // 开启后前端无法通过 JS 操作cookie
-            maxAge: 24 * 3600 * 1000, // 设置cookie的过期时间,cookie的key，cookie的value，均不在此处配置。
-            sameSite: 'none',
-            secure: true
-        },
-    })
 });
 
 router.put('/logout', (req, res) => {
