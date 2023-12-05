@@ -30,36 +30,36 @@ passport.use(new GoogleStrategy({
 
         const username = profile.name.givenName + profile.name.familyName + '@' + provider;
         // 检查是否是从/link路由发起的请求
-        if (request.session.isLinkingAccount) {
+        if (request.cookies.isLinkingAccount) {
             const existingUser = await auths.findOne({userId: userId});
 
             // 如果第三方账号被登录过，则把所有文章移动到现在的账号里，然后删除所有内容，包括auths和profile
             if (existingUser) {
                 // 把所有文章移动到现在的账号里
-                await articles.updateMany({author: existingUser.username}, {$set: {author: request.session.username}});
+                await articles.updateMany({author: existingUser.username}, {$set: {author: request.cookies.username}});
 
-                // 把所有文章的comments.author是existingUser.username的改成request.session.username
-                await articles.updateMany({}, {$set: {"comments.$[elem].author": request.session.username}}, {arrayFilters: [{"elem.author": existingUser.username}]});
+                // 把所有文章的comments.author是existingUser.username的改成request.cookies.username
+                await articles.updateMany({}, {$set: {"comments.$[elem].author": request.cookies.username}}, {arrayFilters: [{"elem.author": existingUser.username}]});
 
                 // 读取 existingUser 的关注列表
                 const existingUserFollowings = await profiles.findOne({username: existingUser.username}).select('following');
                 if (existingUserFollowings && existingUserFollowings.following.length > 0) {
-                    // 更新 request.session.username 的关注列表，添加 existingUser 的关注者
+                    // 更新 request.cookies.username 的关注列表，添加 existingUser 的关注者
                     await profiles.updateOne(
-                        {username: request.session.username},
+                        {username: request.cookies.username},
                         {$addToSet: {following: {$each: existingUserFollowings.following}}}
                     );
                 }
 
-                // 把所有关注 existingUser 的用户的关注列表里的 existingUser 改成 request.session.username
-                await profiles.updateMany({}, {$set: {"following.$[elem]": request.session.username}}, {arrayFilters: [{"elem": existingUser.username}]});
+                // 把所有关注 existingUser 的用户的关注列表里的 existingUser 改成 request.cookies.username
+                await profiles.updateMany({}, {$set: {"following.$[elem]": request.cookies.username}}, {arrayFilters: [{"elem": existingUser.username}]});
 
                 // 删除existingUser所有内容，包括auths和profile
                 await profiles.deleteOne({username: existingUser.username});
                 await auths.deleteOne({username: existingUser.username});
             }
             // 获取当前登录用户并更新其auth信息
-            const currentUser = await auths.findOne({username: request.session.username});
+            const currentUser = await auths.findOne({username: request.cookies.username});
             if (currentUser) {
                 currentUser.auth.set(provider, username);
                 await currentUser.save();
@@ -292,7 +292,7 @@ router.post('/link/:id?', async (req, res) => {
     }
 
     // 设置标记以指示用户正在尝试链接账户
-    req.session.isLinkingAccount = true;
+    req.cookies.isLinkingAccount = true;
     req.cookies.username = username; // 确保我们知道要链接的账户
 
     console.log('Redirecting to Google OAuth');

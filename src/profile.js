@@ -33,7 +33,7 @@ router.put('/headline', async (req, res) => {
         return res.sendStatus(400);
     }
 
-    const {username} = req.session;
+    const username = req.cookies.username;
 
     if (!username) {
         console.log('No username found');
@@ -75,7 +75,7 @@ router.get('/email/:user?', async (req, res) => {
 
 router.put('/email', async (req, res) => {
     const {email} = req.body;
-    const {username} = req.session;
+    const username = req.cookies.username;
 
     if (!username) {
         console.log('No username found');
@@ -119,7 +119,7 @@ router.get('/zipcode/:user?', async (req, res) => {
 
 router.put('/zipcode', async (req, res) => {
     const {zipcode} = req.body;
-    const {username} = req.session;
+    const username = req.cookies.username;
 
     if (!username) {
         console.log('No username found');
@@ -202,7 +202,7 @@ router.put('/phone', async (req, res) => {
         return res.status(400).send('No phone number provided');
     }
 
-    const {username} = req.session;
+    const username = req.cookies.username;
 
     if (!username) {
         console.log('No username found');
