@@ -1,0 +1,20 @@
+{
+    "reporters": [
+        {
+            "name": "jasmine-reporters.JUnitXmlReporter",
+            "options": {
+                "savePath": "./test-results",
+                "consolidateAll": true
+            }
+        }
+    ],
+    "spec_dir": "src",
+    "spec_files": [
+        "articles.spec.js",
+        "profile.spec.js"
+    ],
+    "helpers": [
+        "helpers/**/*.js"
+    ],
+    "random": false
+}
