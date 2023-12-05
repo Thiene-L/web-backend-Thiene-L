@@ -26,7 +26,7 @@ router.get('/articles/:id?', async (req, res) => {
         const limit = parseInt(req.query.limit) || 10; // 获取每页文章数，默认为10
 
         const username = req.session.username;
-        cosole.log('username: ' + username);
+        console.log('username: ' + username);
         const userObj = await profiles.findOne({username: username});
         const usersToQuery = [username, ...userObj.following];
 
