@@ -25,7 +25,7 @@ router.get('/articles/:id?', async (req, res) => {
         const page = parseInt(req.query.page) || 1; // 获取当前页码，默认为1
         const limit = parseInt(req.query.limit) || 10; // 获取每页文章数，默认为10
 
-        const username = req.session.username;
+        const username = req.cookies.username;
         const userObj = await profiles.findOne({username: username});
         const usersToQuery = [username, ...userObj.following];
 
@@ -63,7 +63,7 @@ router.get('/articles/:id?', async (req, res) => {
 router.put('/articles/:id', async (req, res) => {
     const articleId = req.params.id;
     const {text, commentId} = req.body; // 假设请求的正文中包含这些字段
-    const {username} = req.session;
+    const username = req.cookies.username;
 
     // 查找文章
     try {
@@ -142,7 +142,7 @@ router.put('/articles/:id', async (req, res) => {
 
 router.post('/article', upload.single('articleImage'), async (req, res) => {
     const {text} = req.body;
-    const {username} = req.session;
+    const username = req.cookies.username;
     let imageUrl = null;
 
     // 如果请求中包含文件，上传文件到Cloudinary

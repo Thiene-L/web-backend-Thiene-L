@@ -35,27 +35,26 @@ mongoose.connection.on('open', function (err) {
         }));
         app.use(express.json());
         app.use(express.urlencoded({extended: true}))
-        app.use(session({
-            name: 'sid',   //返回给客户端cookie的key。
-            secret: 'monkeyKing', //参与加密的字符串（又称签名）
-            saveUninitialized: false, //是否在存储内容之前创建session会话
-            resave: true,//是否在每次请求时，强制重新保存session，即使他们没有变化（比较保险）
-            // store: MongoStore.create({
-            //     mongoUrl: connectionString,
-            //     touchAfter: 24 * 3600, //修改频率（例：//在24小时之内只更新一次）
-            //     ttl: 24 * 60 * 60 // session 的生存时间，这里设置为1天
-            // }),
-            cookie: {
-                httpOnly: true, // 开启后前端无法通过 JS 操作cookie
-                maxAge: 24 * 3600 * 1000, // 设置cookie的过期时间,cookie的key，cookie的value，均不在此处配置。
-                secure: true,
-                sameSite: 'none' // 允许在跨站点请求中发送 Cookie
-            },
-        }));
-
+        // app.use(session({
+        //     name: 'sid',   //返回给客户端cookie的key。
+        //     secret: 'monkeyKing', //参与加密的字符串（又称签名）
+        //     saveUninitialized: false, //是否在存储内容之前创建session会话
+        //     resave: true,//是否在每次请求时，强制重新保存session，即使他们没有变化（比较保险）
+        //     // store: MongoStore.create({
+        //     //     mongoUrl: connectionString,
+        //     //     touchAfter: 24 * 3600, //修改频率（例：//在24小时之内只更新一次）
+        //     //     ttl: 24 * 60 * 60 // session 的生存时间，这里设置为1天
+        //     // }),
+        //     cookie: {
+        //         httpOnly: true, // 开启后前端无法通过 JS 操作cookie
+        //         maxAge: 24 * 3600 * 1000, // 设置cookie的过期时间,cookie的key，cookie的value，均不在此处配置。
+        //         secure: true, // 仅允许在 HTTPS 上设置 cookie
+        //         sameSite: 'none' // 允许在跨站点请求中发送 Cookie
+        //     },
+        // }));
+        app.use(cookieParser());
         app.use(passport.initialize());
         app.use(passport.session());
-        app.use(cookieParser());
         app.use(authRouter());
         app.use(articleRouter());
         app.use(profileRouter());
