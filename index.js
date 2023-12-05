@@ -48,7 +48,7 @@ mongoose.connection.on('open', function (err) {
             cookie: {
                 httpOnly: true, // 开启后前端无法通过 JS 操作cookie
                 maxAge: 24 * 3600 * 1000, // 设置cookie的过期时间,cookie的key，cookie的value，均不在此处配置。
-                sameSite: 'None',
+                SameSite: 'none',
                 secure: true
             },
         }));
