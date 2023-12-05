@@ -24,8 +24,8 @@ router.get('/articles/:id?', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1; // 获取当前页码，默认为1
         const limit = parseInt(req.query.limit) || 10; // 获取每页文章数，默认为10
+        const username = parseInt(req.params.username) // 获取文章作者，默认为当前用户
 
-        const username = req.cookies.username;
         console.log('username: ' + username);
         const userObj = await profiles.findOne({username: username});
         const usersToQuery = [username, ...userObj.following];
