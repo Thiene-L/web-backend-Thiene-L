@@ -4,7 +4,7 @@ const auths = require('./authSchema');
 const profiles = require('./profileSchema');
 const {isLoggedIn} = require('./middlewares');
 
-router.use(isLoggedIn);
+// router.use(isLoggedIn);
 
 router.get('/following/:user?', async (req, res) => {
     const username = req.params.user || req.session.username;
