@@ -3,6 +3,7 @@ let router = new Router();
 const mongoose = require('mongoose');
 const articles = require('./articlesSchema');
 const profiles = require('./profileSchema');
+const cookieParser = require('cookie-parser');
 const {status, send} = require("express/lib/response");
 const {isLoggedIn} = require('./middlewares');
 const cloudinary = require('./cloudinaryConfig');
@@ -10,6 +11,7 @@ const multer = require('multer');
 const upload = multer({dest: 'uploads/'}); // 暂时保存上传的文件
 
 // router.use(isLoggedIn);
+router.use(cookieParser());
 
 function getArticlesByAuthors({authors, page, limit}) {
     const skip = (page - 1) * limit; // 计算跳过的文档数
@@ -24,7 +26,7 @@ router.get('/articles/:id?', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1; // 获取当前页码，默认为1
         const limit = parseInt(req.query.limit) || 10; // 获取每页文章数，默认为10
-        const username = parseInt(req.params.username) // 获取文章作者，默认为当前用户
+        const username = req.cookies.username;
 
         console.log('cookies:', req.cookies);
         console.log('username: ' + username);
