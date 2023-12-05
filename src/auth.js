@@ -134,8 +134,7 @@ router.get('/auth/google/callback',
         // 成功认证，重定向回主页或其他页面
         req.session.username = username.toString();
         console.log('User logged in', username);
-        res.redirect('https://bl73-hw7.surge.sh/main');
-        // res.redirect(`https://bl73-hw7.surge.sh/main?username=${encodeURIComponent(username)}`);
+        res.redirect(`https://bl-hw7.surge.sh/main?username=${encodeURIComponent(username)}`);
     });
 
 router.get('/', (req, res) => {
