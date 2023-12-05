@@ -13,7 +13,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 passport.use(new GoogleStrategy({
         clientID: '94142100628-sbr3je2nnrumc35jr3935l2i50jlqpsd.apps.googleusercontent.com',
         clientSecret: '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',
-        callbackURL: "https://bl73-e9753fe50cf1.herokuapp.com/auth/google/callback",
+        callbackURL: "https://bl73-0e2710080106.herokuapp.com/auth/google/callback",
         passReqToCallback: true
     },
     async function (request, accessToken, refreshToken, profile, done) {
@@ -291,7 +291,7 @@ router.post('/link/:id?', async (req, res) => {
     req.session.username = username; // 确保我们知道要链接的账户
 
     console.log('Redirecting to Google OAuth');
-    return res.status(200).json({redirect: 'https://bl73-e9753fe50cf1.herokuapp.com/auth/google'});
+    return res.status(200).json({redirect: 'https://bl73-0e2710080106.herokuapp.com/auth/google'});
 });
 
 // router.post('/link/:id?', async (req, res) => {
@@ -310,7 +310,7 @@ router.post('/link/:id?', async (req, res) => {
 //     // 如果用户没有链接过账户
 //     // 重定向到第三方登录页面
 //     console.log('Redirecting to Google OAuth');
-//     return res.status(200).json({redirect: 'https://bl73-e9753fe50cf1.herokuapp.com/auth/google'});
+//     return res.status(200).json({redirect: 'https://bl73-0e2710080106.herokuapp.com/auth/google'});
 // });
 
 router.post('/unlink/:id?', async (req, res) => {
