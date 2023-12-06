@@ -140,30 +140,20 @@ router.get('/auth/google',
     passport.authenticate('google', {scope: ['profile', 'email']}));
 
 router.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: 'https://bl73-0e2710080106.herokuapp.com' }),
-    function (req, res, next) {
-        // 如果没有错误，则继续处理成功的认证
-        if (!req.authError) {
-            const username = req.user.username;
-            console.log('username: ' + username);
-
-            // 成功认证，重定向回主页或其他页面
-            req.session.username = username.toString();
-            console.log('User logged in', username);
-            res.redirect(`https://bl-hw7.surge.sh/main?username=${encodeURIComponent(username)}`);
-        } else {
-            // 如果有错误，将其传递给错误处理中间件
-            next(req.authError);
-        }
+    passport.authenticate('google', {failureRedirect: '/login-failed'}),
+    function (req, res) {
+        // 成功认证逻辑
+        const username = req.user.username;
+        console.log('User logged in', username);
+        res.redirect(`/main?username=${encodeURIComponent(username)}`);
     },
-    // 错误处理中间件
     function (err, req, res, next) {
-        // 处理链接错误
+        // 错误处理逻辑
         if (err && err.message === 'This third-party account has already been linked.') {
-            // 重定向到错误页面或显示错误消息
+            // 重定向到自定义错误页面或显示错误消息
             res.redirect('/error?message=account_already_linked');
         } else {
-            // 调用默认的 Express 错误处理器
+            // 其他错误
             next(err);
         }
     }
