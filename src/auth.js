@@ -170,7 +170,7 @@ router.get('/auth/google/callback',
 
 router.get('/', (req, res) => {
     console.log("Hello World!");
-    return res.send('Hello World!');
+    return res.send('This third-party account has already been linked!');
 });
 
 router.post('/register', async (req, res) => {
