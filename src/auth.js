@@ -140,8 +140,8 @@ router.get('/auth/google',
     passport.authenticate('google', {scope: ['profile', 'email']}));
 
 router.get('/auth/google/callback',
-    passport.authenticate('google', {failureRedirect: 'https://bl73-0e2710080106.herokuapp.com'}),
-    function (req, res) {
+    passport.authenticate('google', { failureRedirect: 'https://bl73-0e2710080106.herokuapp.com' }),
+    function (req, res, next) {
         // 如果没有错误，则继续处理成功的认证
         if (!req.authError) {
             const username = req.user.username;
@@ -156,13 +156,14 @@ router.get('/auth/google/callback',
             next(req.authError);
         }
     },
-    function (req, res, next, err) {
-        // 处理错误
-        if (err.message === 'This third-party account has already been linked.') {
+    // 错误处理中间件
+    function (err, req, res, next) {
+        // 处理链接错误
+        if (err && err.message === 'This third-party account has already been linked.') {
             // 重定向到错误页面或显示错误消息
             res.redirect('/error?message=account_already_linked');
         } else {
-            // 处理其他类型的错误
+            // 调用默认的 Express 错误处理器
             next(err);
         }
     }
