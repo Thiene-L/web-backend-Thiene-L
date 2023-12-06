@@ -17,97 +17,103 @@ passport.use(new GoogleStrategy({
         passReqToCallback: true
     },
     async function (request, accessToken, refreshToken, profile, done) {
-        // 获取用户信息
-        const userId = profile.id;
-        const displayName = profile.displayName;
-        const email = profile.emails[0].value;
-        const emailDomain = email.split('@')[1];
-        const nameExtension = emailDomain.split('.')[0];
-        const avatar = profile.photos[0].value;
-        const provider = profile.provider;
+        try {
+            // 获取用户信息
+            const userId = profile.id;
+            const displayName = profile.displayName;
+            const email = profile.emails[0].value;
+            const emailDomain = email.split('@')[1];
+            const nameExtension = emailDomain.split('.')[0];
+            const avatar = profile.photos[0].value;
+            const provider = profile.provider;
 
-        const username = profile.name.givenName + profile.name.familyName + '@' + provider;
-        // 检查是否是从/link路由发起的请求
-        if (request.session.isLinkingAccount) {
-            const existingUser = await auths.findOne({userId: userId});
+            const username = profile.name.givenName + profile.name.familyName + '@' + provider;
+            // 检查是否是从/link路由发起的请求
+            if (request.session.isLinkingAccount) {
+                const existingUser = await auths.findOne({userId: userId});
 
-            // 如果第三方账号被登录过，则把所有文章移动到现在的账号里，然后删除所有内容，包括auths和profile
-            if (existingUser) {
-                // 把所有文章移动到现在的账号里
-                await articles.updateMany({author: existingUser.username}, {$set: {author: request.session.username}});
+                // 如果第三方账号被登录过，则把所有文章移动到现在的账号里，然后删除所有内容，包括auths和profile
+                if (existingUser) {
+                    // 把所有文章移动到现在的账号里
+                    await articles.updateMany({author: existingUser.username}, {$set: {author: request.session.username}});
 
-                // 把所有文章的comments.author是existingUser.username的改成request.session.username
-                await articles.updateMany({}, {$set: {"comments.$[elem].author": request.session.username}}, {arrayFilters: [{"elem.author": existingUser.username}]});
+                    // 把所有文章的comments.author是existingUser.username的改成request.session.username
+                    await articles.updateMany({}, {$set: {"comments.$[elem].author": request.session.username}}, {arrayFilters: [{"elem.author": existingUser.username}]});
 
-                // 读取 existingUser 的关注列表
-                const existingUserFollowings = await profiles.findOne({username: existingUser.username}).select('following');
-                if (existingUserFollowings && existingUserFollowings.following.length > 0) {
-                    // 更新 request.session.username 的关注列表，添加 existingUser 的关注者
-                    await profiles.updateOne(
-                        {username: request.session.username},
-                        {$addToSet: {following: {$each: existingUserFollowings.following}}}
-                    );
+                    // 读取 existingUser 的关注列表
+                    const existingUserFollowings = await profiles.findOne({username: existingUser.username}).select('following');
+                    if (existingUserFollowings && existingUserFollowings.following.length > 0) {
+                        // 更新 request.session.username 的关注列表，添加 existingUser 的关注者
+                        await profiles.updateOne(
+                            {username: request.session.username},
+                            {$addToSet: {following: {$each: existingUserFollowings.following}}}
+                        );
+                    }
+
+                    // 把所有关注 existingUser 的用户的关注列表里的 existingUser 改成 request.session.username
+                    await profiles.updateMany({}, {$set: {"following.$[elem]": request.session.username}}, {arrayFilters: [{"elem": existingUser.username}]});
+
+                    // 删除existingUser所有内容，包括auths和profile
+                    await profiles.deleteOne({username: existingUser.username});
+                    await auths.deleteOne({username: existingUser.username});
                 }
 
-                // 把所有关注 existingUser 的用户的关注列表里的 existingUser 改成 request.session.username
-                await profiles.updateMany({}, {$set: {"following.$[elem]": request.session.username}}, {arrayFilters: [{"elem": existingUser.username}]});
+                // 如果账号已经被别的用户链接
+                const linkedUser = await auths.findOne({'auth.google': username});
+                if (linkedUser && request.session.username !== linkedUser.username) {
+                    console.log('This third-party account has already been linked.');
+                    // 重定向到错误页面或显示错误消息
+                    throw new Error('This third-party account has already been linked.');
+                }
 
-                // 删除existingUser所有内容，包括auths和profile
-                await profiles.deleteOne({username: existingUser.username});
-                await auths.deleteOne({username: existingUser.username});
-            }
-
-            // 如果账号已经被别的用户链接
-            const linkedUser = await auths.findOne({'auth.google': username});
-            if (linkedUser && request.session.username !== linkedUser.username) {
-                console.log('This third-party account has already been linked.');
-                // 这里我们使用 done 的第一个参数来传递错误信息
-                return done(new Error('This third-party account has already been linked.'));
-            }
-
-            // 获取当前登录用户并更新其auth信息
-            const currentUser = await auths.findOne({username: request.session.username});
-            if (currentUser) {
-                currentUser.auth.set(provider, username);
-                await currentUser.save();
-            }
-            return done(null, currentUser);
-        } else {
-            // 如果账号已经被链接，则正常登录链接账号
-            const linkedUser = await auths.findOne({'auth.google': username});
-            console.log('linkedUser:' + linkedUser);
-            // 若果存在linkedUser，直接登录
-            if (linkedUser !== null) {
-                console.log('User already linked');
-                // 导航到主页
-                done(null, linkedUser);
-                return;
-            }
-            // 处理正常的OAuth登录
-            // 检查是否已经存在用户
-            const existingUser = await auths.findOne({userId: userId});
-            if (existingUser) {
-                console.log('User already exists');
-                done(null, existingUser);
+                // 获取当前登录用户并更新其auth信息
+                const currentUser = await auths.findOne({username: request.session.username});
+                if (currentUser) {
+                    currentUser.auth.set(provider, username);
+                    await currentUser.save();
+                }
+                return done(null, currentUser);
             } else {
-                // 创建新用户
-                const newUser = await auths.create({
-                    userId: userId,
-                    username: username,
-                    displayName: displayName,
-                    email: email
-                });
-                // 创建profile
-                const newProfile = await profiles.create({
-                    username: username,
-                    headline: 'Happy!',
-                    email: email,
-                    avatar: avatar,
-                });
-                done(null, newUser);
+                // 如果账号已经被链接，则正常登录链接账号
+                const linkedUser = await auths.findOne({'auth.google': username});
+                console.log('linkedUser:' + linkedUser);
+                // 若果存在linkedUser，直接登录
+                if (linkedUser !== null) {
+                    console.log('User already linked');
+                    // 导航到主页
+                    done(null, linkedUser);
+                    return;
+                }
+                // 处理正常的OAuth登录
+                // 检查是否已经存在用户
+                const existingUser = await auths.findOne({userId: userId});
+                if (existingUser) {
+                    console.log('User already exists');
+                    done(null, existingUser);
+                } else {
+                    // 创建新用户
+                    const newUser = await auths.create({
+                        userId: userId,
+                        username: username,
+                        displayName: displayName,
+                        email: email
+                    });
+                    // 创建profile
+                    const newProfile = await profiles.create({
+                        username: username,
+                        headline: 'Happy!',
+                        email: email,
+                        avatar: avatar,
+                    });
+                    done(null, newUser);
+                }
             }
+        } catch (err) {
+            console.error('Error authenticating with Google', err);
+            return done(null, false, {authError: err}); // 出现错误时调用 done，并将错误信息放在 authError 字段中
         }
-    }));
+    }
+));
 
 passport.serializeUser((user, done) => {
     console.log(user);
@@ -136,14 +142,19 @@ router.get('/auth/google',
 router.get('/auth/google/callback',
     passport.authenticate('google', {failureRedirect: 'https://bl73-0e2710080106.herokuapp.com'}),
     function (req, res) {
-        const username = req.user.username;
-        // 获取username
-        console.log('username: ' + username);
+        // 如果没有错误，则继续处理成功的认证
+        if (!req.authError) {
+            const username = req.user.username;
+            console.log('username: ' + username);
 
-        // 成功认证，重定向回主页或其他页面
-        req.session.username = username.toString();
-        console.log('User logged in', username);
-        res.redirect(`https://bl-hw7.surge.sh/main?username=${encodeURIComponent(username)}`);
+            // 成功认证，重定向回主页或其他页面
+            req.session.username = username.toString();
+            console.log('User logged in', username);
+            res.redirect(`https://bl-hw7.surge.sh/main?username=${encodeURIComponent(username)}`);
+        } else {
+            // 如果有错误，将其传递给错误处理中间件
+            next(req.authError);
+        }
     },
     function (req, res, next, err) {
         // 处理错误
